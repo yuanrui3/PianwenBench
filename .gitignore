@@ -1,0 +1,10 @@
+# The test split is never committed
+private/
+data/test/
+*.test.jsonl
+
+# Model outputs and API logs stay local until a release
+runs/
+*.log
+.env
+__pycache__/
