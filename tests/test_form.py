@@ -20,6 +20,22 @@ def counts(report):
 
 
 class TestFormEvidence(unittest.TestCase):
+    def test_lan_follows_the_declared_edition_and_keeps_original_evidence(self):
+        old = {"pingze": "平", "rhyme": "上平聲十四寒"}
+        for char in ("斓", "斕"):
+            for candidates in ([old], []):
+                with self.subTest(char=char, candidates=candidates):
+                    annotation = {"char": char, "candidates": candidates, "selected": old if candidates else None}
+                    slots = [rule(rhyme_group="上平聲十五刪"), rule(position=1, rhyme_group="上平聲十四寒")]
+                    report = evaluate_form(slots, [[annotation]])
+                    accepted, rejected = report["slots"]
+                    self.assertEqual(counts(accepted), (1, 1, 1))
+                    self.assertEqual(counts(rejected), (1, 0, 0))
+                    self.assertEqual(accepted["observed"], annotation)
+                    self.assertEqual(accepted["reading_status"], "edition_ruling")
+                    self.assertEqual(accepted["edition_reading"]["rhyme_group"], "上平聲十五刪")
+                    self.assertEqual(bool(report["dictionary_gaps"]), not candidates)
+
     def test_context_takes_precedence_over_another_possible_reading(self):
         slots = [rule(tone="平", rhyme_group=LEVEL["rhyme"], character="望")]
         report = evaluate_form(slots, [[word(LEVEL, OBLIQUE, selected=OBLIQUE)]])

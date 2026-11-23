@@ -5,6 +5,8 @@ from unicodedata import name
 
 
 AXES = ("tone", "rhyme_group", "character")
+LAN_RHYME = "上平聲十五刪"
+LAN_SOURCE = "https://zh.wikisource.org/wiki/Special:PermanentLink/8264804#上平聲部"
 
 
 def _positive_int(value):
@@ -74,6 +76,8 @@ def _possible_readings(annotation, slots):
     if annotation is None:
         return [{}], "missing"
     char = annotation["char"]
+    if char in ("斓", "斕"):
+        return [{"character": char, "tone": "平", "rhyme_group": LAN_RHYME}], "edition_ruling"
     candidates = annotation["candidates"]
     selected = annotation.get("selected")
     if candidates:
@@ -155,7 +159,7 @@ def evaluate_form(slots, lines):
             coordinate = {"line": line_number, "position": slot["position"]}
             if reading_status == "missing":
                 missing_slots.append(coordinate)
-            if reading_status == "dictionary_gap":
+            if annotation is not None and not annotation["candidates"]:
                 dictionary_gaps.append(coordinate)
             evidence[index] = {
                 "declaration": dict(slot),
@@ -164,6 +168,8 @@ def evaluate_form(slots, lines):
                 **_tally([slot], possibilities),
                 "axes": {axis: _tally([slot], possibilities, axis) for axis in AXES if axis in slot},
             }
+            if reading_status == "edition_ruling":
+                evidence[index]["edition_reading"] = {**possibilities[0], "source": LAN_SOURCE}
     joint = totals.pop(None)
     return {
         **joint, "axes": totals, "slots": evidence,
